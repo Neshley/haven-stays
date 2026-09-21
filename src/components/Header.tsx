@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Globe, Menu, User, Heart, Compass, Check, Home, Building2, Key } from 'lucide-react';
 import { FilterState } from '../types';
+import { CurrencyInfo } from '../utils/currency';
 
 interface HeaderProps {
   filters: FilterState;
@@ -10,6 +11,8 @@ interface HeaderProps {
   onOpenWishlist: () => void;
   onResetFilters: () => void;
   onSelectIntent: (intent: 'all' | 'stay' | 'rent' | 'sale') => void;
+  currentCurrency: CurrencyInfo;
+  onOpenCurrencyModal: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,10 +23,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenWishlist,
   onResetFilters,
   onSelectIntent,
+  currentCurrency,
+  onOpenCurrencyModal,
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
-  const [currentCurrency, setCurrentCurrency] = useState('USD ($)');
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
@@ -188,11 +191,12 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Currency & Language selector button */}
             <button
               id="language-currency-button"
-              onClick={() => setCurrencyModalOpen(true)}
-              className="p-2.5 text-neutral-700 hover:bg-neutral-100 rounded-full transition cursor-pointer"
-              title="Change language and currency"
+              onClick={onOpenCurrencyModal}
+              className="px-3 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-100 rounded-full transition cursor-pointer flex items-center gap-1.5 border border-transparent hover:border-neutral-200"
+              title="Change currency and language"
             >
-              <Globe className="w-4 h-4" />
+              <Globe className="w-4 h-4 text-neutral-600" />
+              <span>{currentCurrency?.code || 'USD'} ({currentCurrency?.symbol || '$'})</span>
             </button>
 
             {/* Wishlist quick action */}
@@ -285,37 +289,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
       </div>
-
-      {/* Currency Modal */}
-      {currencyModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-neutral-200">
-            <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
-              <h3 className="font-bold text-lg text-neutral-900">Choose a currency</h3>
-              <button 
-                onClick={() => setCurrencyModalOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-neutral-100 flex items-center justify-center text-neutral-500"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              {['USD ($)', 'EUR (€)', 'GBP (£)', 'JPY (¥)', 'CAD ($)', 'AUD ($)'].map(curr => (
-                <button
-                  key={curr}
-                  onClick={() => { setCurrentCurrency(curr); setCurrencyModalOpen(false); }}
-                  className={`flex items-center justify-between p-3 rounded-xl border text-sm text-left transition ${
-                    currentCurrency === curr ? 'border-neutral-900 bg-neutral-50 font-semibold' : 'border-neutral-200 hover:border-neutral-300'
-                  }`}
-                >
-                  <span>{curr}</span>
-                  {currentCurrency === curr && <Check className="w-4 h-4 text-neutral-900" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 };

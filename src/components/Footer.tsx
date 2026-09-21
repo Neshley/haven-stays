@@ -1,7 +1,16 @@
 import React from 'react';
 import { Globe, Heart } from 'lucide-react';
+import { CurrencyInfo } from '../utils/currency';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  currentCurrency?: CurrencyInfo;
+  onOpenCurrencyModal?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({
+  currentCurrency,
+  onOpenCurrencyModal,
+}) => {
   return (
     <footer className="bg-neutral-100 border-t border-neutral-200 mt-20 text-neutral-600 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -68,12 +77,19 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6 font-semibold text-neutral-800">
-            <button className="flex items-center gap-2 hover:underline cursor-pointer">
+            <button
+              onClick={onOpenCurrencyModal}
+              className="flex items-center gap-2 hover:underline cursor-pointer"
+            >
               <Globe className="w-4 h-4" />
               <span>English (US)</span>
             </button>
-            <button className="hover:underline cursor-pointer">
-              <span>$ USD</span>
+            <button
+              id="footer-currency-button"
+              onClick={onOpenCurrencyModal}
+              className="hover:underline cursor-pointer flex items-center gap-1.5"
+            >
+              <span>{currentCurrency ? `${currentCurrency.symbol} ${currentCurrency.code}` : '$ USD'}</span>
             </button>
           </div>
         </div>

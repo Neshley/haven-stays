@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, Star, ChevronLeft, ChevronRight, Building2, Key, Sparkles } from 'lucide-react';
 import { Listing } from '../types';
+import { CurrencyInfo, formatCurrency } from '../utils/currency';
 
 interface ListingCardProps {
   listing: Listing;
@@ -8,6 +9,7 @@ interface ListingCardProps {
   onToggleWishlist: (id: string) => void;
   onSelect: (listing: Listing) => void;
   showTotalBeforeTaxes: boolean;
+  currentCurrency: CurrencyInfo;
 }
 
 export const ListingCard: React.FC<ListingCardProps> = ({
@@ -16,6 +18,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
   onToggleWishlist,
   onSelect,
   showTotalBeforeTaxes,
+  currentCurrency,
 }) => {
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -79,16 +82,16 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         <div className="mt-2 flex flex-col">
           <div className="flex items-baseline gap-1.5">
             <span className="font-extrabold text-neutral-900 text-base">
-              ${listing.salePrice.toLocaleString()}
+              {formatCurrency(listing.salePrice, currentCurrency)}
             </span>
             {pricePerSqft && (
               <span className="text-neutral-500 text-xs font-normal">
-                (${pricePerSqft}/sq ft)
+                ({formatCurrency(pricePerSqft, currentCurrency)}/sq ft)
               </span>
             )}
           </div>
           <span className="text-neutral-500 text-[11px]">
-            Est. ${estMortgage.toLocaleString()}/mo mortgage
+            Est. {formatCurrency(estMortgage, currentCurrency)}/mo mortgage
           </span>
         </div>
       );
@@ -99,7 +102,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         <div className="mt-2 flex flex-col">
           <div className="flex items-baseline gap-1">
             <span className="font-extrabold text-neutral-900 text-base">
-              ${listing.monthlyRent.toLocaleString()}
+              {formatCurrency(listing.monthlyRent, currentCurrency)}
             </span>
             <span className="text-neutral-600 text-xs font-normal">/ month</span>
           </div>
@@ -118,12 +121,12 @@ export const ListingCard: React.FC<ListingCardProps> = ({
       <div className="mt-2 text-sm flex items-baseline gap-1">
         {showTotalBeforeTaxes ? (
           <div>
-            <span className="font-bold text-neutral-900">${totalPrice}</span>
+            <span className="font-bold text-neutral-900">{formatCurrency(totalPrice, currentCurrency)}</span>
             <span className="text-neutral-600 text-xs font-normal"> total before taxes</span>
           </div>
         ) : (
           <div>
-            <span className="font-extrabold text-neutral-900 text-[15px]">${listing.pricePerNight}</span>
+            <span className="font-extrabold text-neutral-900 text-[15px]">{formatCurrency(listing.pricePerNight, currentCurrency)}</span>
             <span className="text-neutral-600 font-normal text-xs"> night</span>
           </div>
         )}

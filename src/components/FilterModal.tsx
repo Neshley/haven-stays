@@ -3,6 +3,7 @@ import { X, Check, Building2, Key, Home, Sparkles } from 'lucide-react';
 import { FilterState, PropertyType, PlaceType } from '../types';
 import { AMENITY_OPTIONS } from '../data/listings';
 import { DynamicIcon } from './DynamicIcon';
+import { CurrencyInfo } from '../utils/currency';
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface FilterModalProps {
   filters: FilterState;
   onApplyFilters: (newFilters: FilterState) => void;
   totalFilteredCount: number;
+  currentCurrency?: CurrencyInfo;
 }
 
 const PROPERTY_TYPES: { type: PropertyType; label: string; icon: string }[] = [
@@ -27,7 +29,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   filters,
   onApplyFilters,
   totalFilteredCount,
+  currentCurrency,
 }) => {
+  const currencySymbol = currentCurrency ? currentCurrency.symbol : '$';
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
 
   // Sync state when opened
@@ -193,7 +197,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       Min Monthly Rent
                     </label>
                     <div className="flex items-center text-base font-semibold text-neutral-900">
-                      <span className="mr-1 text-neutral-500">$</span>
+                      <span className="mr-1 text-neutral-500 font-bold">{currencySymbol}</span>
                       <input
                         type="number"
                         min={1000}
@@ -211,7 +215,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       Max Monthly Rent
                     </label>
                     <div className="flex items-center text-base font-semibold text-neutral-900">
-                      <span className="mr-1 text-neutral-500">$</span>
+                      <span className="mr-1 text-neutral-500 font-bold">{currencySymbol}</span>
                       <input
                         type="number"
                         min={localFilters.minRent + 200}
@@ -263,7 +267,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       Min Purchase Price
                     </label>
                     <div className="flex items-center text-base font-semibold text-neutral-900">
-                      <span className="mr-1 text-neutral-500">$</span>
+                      <span className="mr-1 text-neutral-500 font-bold">{currencySymbol}</span>
                       <input
                         type="number"
                         min={300000}
@@ -281,7 +285,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       Max Purchase Price
                     </label>
                     <div className="flex items-center text-base font-semibold text-neutral-900">
-                      <span className="mr-1 text-neutral-500">$</span>
+                      <span className="mr-1 text-neutral-500 font-bold">{currencySymbol}</span>
                       <input
                         type="number"
                         min={localFilters.minSalePrice + 100000}
@@ -352,7 +356,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       Min Nightly
                     </label>
                     <div className="flex items-center text-base font-semibold text-neutral-900">
-                      <span className="mr-1 text-neutral-500">$</span>
+                      <span className="mr-1 text-neutral-500 font-bold">{currencySymbol}</span>
                       <input
                         type="number"
                         min={20}
@@ -369,7 +373,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       Max Nightly
                     </label>
                     <div className="flex items-center text-base font-semibold text-neutral-900">
-                      <span className="mr-1 text-neutral-500">$</span>
+                      <span className="mr-1 text-neutral-500 font-bold">{currencySymbol}</span>
                       <input
                         type="number"
                         min={localFilters.minPrice + 10}

@@ -23,12 +23,14 @@ import {
 import { Listing } from '../types';
 import { AMENITY_OPTIONS } from '../data/listings';
 import { DynamicIcon } from './DynamicIcon';
+import { CurrencyInfo, formatCurrency } from '../utils/currency';
 
 interface ListingDetailModalProps {
   listing: Listing | null;
   onClose: () => void;
   isWishlisted: boolean;
   onToggleWishlist: (id: string) => void;
+  currentCurrency: CurrencyInfo;
 }
 
 export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
@@ -36,6 +38,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
   onClose,
   isWishlisted,
   onToggleWishlist,
+  currentCurrency,
 }) => {
   // Stay states
   const [nights, setNights] = useState(5);
@@ -412,7 +415,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                     <div className="flex items-baseline justify-between">
                       <div>
                         <span className="text-2xl font-extrabold text-neutral-900">
-                          ${listing.pricePerNight}
+                          {formatCurrency(listing.pricePerNight, currentCurrency)}
                         </span>
                         <span className="text-neutral-500 text-sm font-normal"> / night</span>
                       </div>
@@ -449,13 +452,13 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setGuestsCount(Math.max(1, guestsCount - 1))}
-                            className="w-6 h-6 rounded-full border border-neutral-300 flex items-center justify-center font-bold text-neutral-700"
+                            className="w-6 h-6 rounded-full border border-neutral-300 flex items-center justify-center font-bold text-neutral-700 cursor-pointer"
                           >
                             -
                           </button>
                           <button
                             onClick={() => setGuestsCount(Math.min(listing.maxGuests, guestsCount + 1))}
-                            className="w-6 h-6 rounded-full border border-neutral-300 flex items-center justify-center font-bold text-neutral-700"
+                            className="w-6 h-6 rounded-full border border-neutral-300 flex items-center justify-center font-bold text-neutral-700 cursor-pointer"
                           >
                             +
                           </button>
@@ -481,20 +484,20 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
 
                     <div className="space-y-2 text-xs text-neutral-600 pt-2 border-t border-neutral-100">
                       <div className="flex justify-between">
-                        <span className="underline">${listing.pricePerNight} x {nights} nights</span>
-                        <span>${basePrice}</span>
+                        <span className="underline">{formatCurrency(listing.pricePerNight, currentCurrency)} x {nights} nights</span>
+                        <span>{formatCurrency(basePrice, currentCurrency)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="underline">Cleaning fee</span>
-                        <span>${cleaningFee}</span>
+                        <span>{formatCurrency(cleaningFee, currentCurrency)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="underline">Haven service fee</span>
-                        <span>${serviceFee}</span>
+                        <span>{formatCurrency(serviceFee, currentCurrency)}</span>
                       </div>
                       <div className="flex justify-between font-bold text-sm text-neutral-900 pt-2 border-t border-neutral-200">
                         <span>Total</span>
-                        <span>${grandTotal}</span>
+                        <span>{formatCurrency(grandTotal, currentCurrency)}</span>
                       </div>
                     </div>
                   </>
@@ -506,12 +509,12 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                     <div>
                       <div className="flex items-baseline justify-between">
                         <span className="text-2xl font-extrabold text-neutral-900">
-                          ${listing.monthlyRent?.toLocaleString()}
+                          {formatCurrency(listing.monthlyRent, currentCurrency)}
                         </span>
                         <span className="text-neutral-500 text-sm font-medium"> / month</span>
                       </div>
                       <p className="text-xs text-neutral-500 mt-0.5">
-                        Deposit: ${listing.deposit?.toLocaleString()} • {listing.leaseTerm}
+                        Deposit: {formatCurrency(listing.deposit, currentCurrency)} • {listing.leaseTerm}
                       </p>
                     </div>
 
@@ -635,11 +638,11 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                       <span className="text-neutral-400 text-xs font-bold uppercase tracking-wider block">List Price</span>
                       <div className="flex items-baseline justify-between">
                         <span className="text-2xl font-extrabold text-neutral-900">
-                          ${listing.salePrice?.toLocaleString()}
+                          {formatCurrency(listing.salePrice, currentCurrency)}
                         </span>
                         {listing.sqft && (
                           <span className="text-neutral-500 text-xs font-semibold">
-                            ${Math.round((listing.salePrice || 0) / listing.sqft)} / sq ft
+                            {formatCurrency(Math.round((listing.salePrice || 0) / listing.sqft), currentCurrency)} / sq ft
                           </span>
                         )}
                       </div>
@@ -670,22 +673,22 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                         <div className="bg-emerald-50/80 p-3.5 rounded-2xl border border-emerald-200">
                           <span className="text-[11px] text-emerald-800 font-semibold block">Est. Total Monthly Payment</span>
                           <span className="text-2xl font-black text-emerald-950 block mt-0.5">
-                            ${totalMonthlyMortgage.toLocaleString()}
+                            {formatCurrency(totalMonthlyMortgage, currentCurrency)}
                             <span className="text-xs font-normal text-emerald-800"> / mo</span>
                           </span>
                           <div className="mt-2 text-[11px] text-emerald-800 divide-y divide-emerald-200/60">
                             <div className="flex justify-between py-0.5">
                               <span>Principal & Interest:</span>
-                              <span className="font-bold">${monthlyPrincipalAndInterest.toLocaleString()}</span>
+                              <span className="font-bold">{formatCurrency(monthlyPrincipalAndInterest, currentCurrency)}</span>
                             </div>
                             <div className="flex justify-between py-0.5">
                               <span>Property Taxes:</span>
-                              <span className="font-bold">${monthlyTax.toLocaleString()}</span>
+                              <span className="font-bold">{formatCurrency(monthlyTax, currentCurrency)}</span>
                             </div>
                             {listing.hoaFee && (
                               <div className="flex justify-between py-0.5">
                                 <span>HOA Dues:</span>
-                                <span className="font-bold">${listing.hoaFee.toLocaleString()}</span>
+                                <span className="font-bold">{formatCurrency(listing.hoaFee, currentCurrency)}</span>
                               </div>
                             )}
                           </div>
@@ -695,7 +698,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                         <div>
                           <div className="flex justify-between text-neutral-700 font-semibold mb-1 text-[11px]">
                             <span>Down Payment: {downPaymentPct}%</span>
-                            <span>${downPaymentAmount.toLocaleString()}</span>
+                            <span>{formatCurrency(downPaymentAmount, currentCurrency)}</span>
                           </div>
                           <div className="flex gap-2">
                             {[10, 20, 30].map(pct => (
@@ -703,7 +706,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                                 key={pct}
                                 type="button"
                                 onClick={() => setDownPaymentPct(pct)}
-                                className={`flex-1 py-1 rounded-lg border text-[11px] font-bold transition ${
+                                className={`flex-1 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer ${
                                   downPaymentPct === pct ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-200 text-neutral-700'
                                 }`}
                               >

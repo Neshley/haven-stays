@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Listing } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Minus, Star, X, MapPin, Building2, Key, Home, LocateFixed, RotateCcw, Loader2, ChevronDown, ChevronUp, Layers } from 'lucide-react';
+import { Plus, Minus, Star, X, MapPin, Building2, Key, Home, LocateFixed, RotateCcw, Loader2, ChevronDown, ChevronUp, Layers, Maximize2, Minimize2 } from 'lucide-react';
+import { CurrencyInfo, formatCurrency } from '../utils/currency';
 
 interface MapViewProps {
   listings: Listing[];
@@ -14,6 +15,9 @@ interface MapViewProps {
   onResetCenter?: () => void;
   onTriggerNearMe?: () => void;
   isLocating?: boolean;
+  currentCurrency: CurrencyInfo;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: (fullscreen: boolean) => void;
 }
 
 function getDistanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -41,7 +45,80 @@ export const MapView: React.FC<MapViewProps> = ({
   onResetCenter,
   onTriggerNearMe,
   isLocating = false,
+  currentCurrency,
+  isFullscreen: propIsFullscreen,
+  onToggleFullscreen,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [internalFullscreen, setInternalFullscreen] = useState(false);
+  const isFullscreen = propIsFullscreen !== undefined ? propIsFullscreen : internalFullscreen;
+
+  const setIsFullscreen = (nextVal: boolean) => {
+    if (onToggleFullscreen) {
+      onToggleFullscreen(nextVal);
+    } else {
+      setInternalFullscreen(nextVal);
+    }
+  };
+
+  const toggleFullscreen = () => {
+    const nextVal = !isFullscreen;
+    setIsFullscreen(nextVal);
+
+    if (nextVal) {
+      try {
+        if (containerRef.current && !document.fullscreenElement && containerRef.current.requestFullscreen) {
+          containerRef.current.requestFullscreen().catch(() => {});
+        }
+      } catch {
+        // Fallback gracefully to CSS fixed fullscreen
+      }
+    } else {
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch {
+        // Fallback
+      }
+    }
+  };
+
+  // Keyboard shortcut: ESC to exit fullscreen & handle body overflow
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsFullscreen(false);
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isFullscreen]);
+
   const [internalZoom, setInternalZoom] = useState(zoom);
   const currentZoom = onZoomChange ? zoom : internalZoom;
   const setZoom = (valOrFn: number | ((prev: number) => number)) => {
@@ -89,19 +166,24 @@ export const MapView: React.FC<MapViewProps> = ({
 
   const formatPinPrice = (listing: Listing) => {
     if (listing.intent === 'sale' && listing.salePrice) {
-      if (listing.salePrice >= 1000000) {
-        return `$${(listing.salePrice / 1000000).toFixed(1)}M`;
-      }
-      return `$${Math.round(listing.salePrice / 1000)}k`;
+      return formatCurrency(listing.salePrice, currentCurrency, true);
     }
     if (listing.intent === 'rent' && listing.monthlyRent) {
-      return `$${(listing.monthlyRent / 1000).toFixed(1)}k/mo`;
+      return `${formatCurrency(listing.monthlyRent, currentCurrency, true)}/mo`;
     }
-    return `$${listing.pricePerNight}`;
+    return formatCurrency(listing.pricePerNight, currentCurrency, false);
   };
 
   return (
-    <div className="relative w-full h-[700px] rounded-3xl overflow-hidden bg-sky-50 border border-neutral-200 shadow-inner select-none">
+    <div 
+      ref={containerRef}
+      id="interactive-map-canvas-container"
+      className={`relative overflow-hidden bg-sky-50 select-none transition-all duration-300 ${
+        isFullscreen
+          ? 'fixed inset-0 z-50 w-screen h-screen rounded-none border-none shadow-none'
+          : 'w-full h-[700px] rounded-3xl border border-neutral-200 shadow-inner'
+      }`}
+    >
       
       {/* Stylized Vector World Map Grid Background */}
       <div 
@@ -193,8 +275,41 @@ export const MapView: React.FC<MapViewProps> = ({
         })}
       </div>
 
-      {/* Floating Zoom and Location Controls */}
+      {/* Fullscreen Mode Top Bar */}
+      {isFullscreen && (
+        <div className="absolute top-4 left-4 z-40 flex items-center gap-2">
+          <button
+            id="map-exit-fullscreen-badge-btn"
+            onClick={toggleFullscreen}
+            className="bg-neutral-900/95 hover:bg-neutral-900 text-white px-3.5 py-2 rounded-full text-xs font-bold shadow-xl backdrop-blur-md flex items-center gap-2 transition hover:scale-105 cursor-pointer"
+            title="Exit full screen view (Esc)"
+          >
+            <Minimize2 className="w-3.5 h-3.5" />
+            <span>Exit Fullscreen</span>
+            <kbd className="text-[10px] text-neutral-400 font-mono bg-neutral-800 px-1.5 py-0.5 rounded ml-0.5">ESC</kbd>
+          </button>
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-neutral-200 shadow-sm text-xs font-semibold text-neutral-700">
+            <Layers className="w-3.5 h-3.5 text-neutral-500" />
+            <span>{listings.length} places mapped</span>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Zoom, Fullscreen, and Location Controls */}
       <div className="absolute top-4 right-4 z-30 flex flex-col bg-white rounded-2xl shadow-lg border border-neutral-200 overflow-hidden divide-y divide-neutral-200">
+        <button
+          id="map-fullscreen-toggle-control"
+          onClick={toggleFullscreen}
+          className="p-3 text-neutral-700 hover:bg-neutral-100 transition cursor-pointer group"
+          title={isFullscreen ? 'Exit full screen (Esc)' : 'Expand to full screen'}
+          aria-label={isFullscreen ? 'Exit full screen' : 'Expand to full screen'}
+        >
+          {isFullscreen ? (
+            <Minimize2 className="w-4 h-4 text-neutral-900 group-hover:scale-110 transition-transform" />
+          ) : (
+            <Maximize2 className="w-4 h-4 text-neutral-700 group-hover:scale-110 transition-transform" />
+          )}
+        </button>
         <button
           id="map-zoom-in-control"
           onClick={() => setZoom((z) => Math.min(1.8, z + 0.18))}
@@ -427,15 +542,15 @@ export const MapView: React.FC<MapViewProps> = ({
             )}
             <div className="mt-2 text-xs">
               {hoveredListing.intent === 'sale' ? (
-                <span className="font-extrabold text-neutral-900 text-sm">${hoveredListing.salePrice?.toLocaleString()}</span>
+                <span className="font-extrabold text-neutral-900 text-sm">{formatCurrency(hoveredListing.salePrice, currentCurrency)}</span>
               ) : hoveredListing.intent === 'rent' ? (
                 <div>
-                  <span className="font-extrabold text-neutral-900 text-sm">${hoveredListing.monthlyRent?.toLocaleString()}</span>
+                  <span className="font-extrabold text-neutral-900 text-sm">{formatCurrency(hoveredListing.monthlyRent, currentCurrency)}</span>
                   <span className="text-neutral-500 font-normal"> / month</span>
                 </div>
               ) : (
                 <div>
-                  <span className="font-extrabold text-neutral-900 text-sm">${hoveredListing.pricePerNight}</span>
+                  <span className="font-extrabold text-neutral-900 text-sm">{formatCurrency(hoveredListing.pricePerNight, currentCurrency)}</span>
                   <span className="text-neutral-500 font-normal"> / night</span>
                 </div>
               )}

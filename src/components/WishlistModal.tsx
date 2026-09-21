@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Heart, Star, Trash2 } from 'lucide-react';
 import { Listing } from '../types';
+import { CurrencyInfo, formatCurrency } from '../utils/currency';
 
 interface WishlistModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface WishlistModalProps {
   wishlistedListings: Listing[];
   onRemoveFromWishlist: (id: string) => void;
   onSelectListing: (listing: Listing) => void;
+  currentCurrency: CurrencyInfo;
 }
 
 export const WishlistModal: React.FC<WishlistModalProps> = ({
@@ -16,6 +18,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
   wishlistedListings,
   onRemoveFromWishlist,
   onSelectListing,
+  currentCurrency,
 }) => {
   if (!isOpen) return null;
 
@@ -70,7 +73,13 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                     <h4 className="font-bold text-neutral-900 text-sm truncate">{listing.title}</h4>
                     <p className="text-neutral-500 text-xs truncate">{listing.location.city}, {listing.location.country}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="font-bold text-neutral-900 text-xs">${listing.pricePerNight} / night</span>
+                      <span className="font-bold text-neutral-900 text-xs">
+                        {listing.intent === 'sale' && listing.salePrice
+                          ? formatCurrency(listing.salePrice, currentCurrency)
+                          : listing.intent === 'rent' && listing.monthlyRent
+                          ? `${formatCurrency(listing.monthlyRent, currentCurrency)} / month`
+                          : `${formatCurrency(listing.pricePerNight, currentCurrency)} / night`}
+                      </span>
                       <span>•</span>
                       <div className="flex items-center gap-0.5 text-xs text-neutral-700">
                         <Star className="w-3 h-3 fill-neutral-900 text-neutral-900" />

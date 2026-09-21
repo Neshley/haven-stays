@@ -10,8 +10,17 @@ import { ListingCard } from './components/ListingCard';
 import { ListingDetailModal } from './components/ListingDetailModal';
 import { MapView } from './components/MapView';
 import { WishlistModal } from './components/WishlistModal';
+import { CurrencyModal } from './components/CurrencyModal';
 import { Footer } from './components/Footer';
-import { Map, List, RotateCcw, X, SlidersHorizontal, Sparkles, Building2, Key, Home, LocateFixed, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  SUPPORTED_CURRENCIES,
+  DEFAULT_SUPPORTED_CURRENCIES,
+  DEFAULT_CURRENCY_CODE,
+  CurrencyInfo,
+  formatCurrency,
+  fetchLiveExchangeRates,
+} from './utils/currency';
+import { Map, List, RotateCcw, X, SlidersHorizontal, Sparkles, Building2, Key, Home, LocateFixed, Loader2, AlertCircle, CheckCircle2, Maximize2, Minimize2 } from 'lucide-react';
 
 const INITIAL_FILTERS: FilterState = {
   intent: 'all',
@@ -51,8 +60,55 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
+  const [currencies, setCurrencies] = useState<Record<string, CurrencyInfo>>(DEFAULT_SUPPORTED_CURRENCIES);
+  const [ratesStatus, setRatesStatus] = useState<{ isLive: boolean; lastUpdated?: string; isLoading: boolean }>({
+    isLive: false,
+    lastUpdated: undefined,
+    isLoading: true,
+  });
+  const [currentCurrency, setCurrentCurrency] = useState<CurrencyInfo>(() => {
+    return DEFAULT_SUPPORTED_CURRENCIES[DEFAULT_CURRENCY_CODE] || Object.values(DEFAULT_SUPPORTED_CURRENCIES)[0];
+  });
+
+  // Fetch real-time live exchange rates on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRates() {
+      setRatesStatus((prev) => ({ ...prev, isLoading: true }));
+      const result = await fetchLiveExchangeRates();
+      if (isMounted && result) {
+        setCurrencies(result.currencies);
+        setRatesStatus({
+          isLive: result.isLive,
+          lastUpdated: result.lastUpdated,
+          isLoading: false,
+        });
+        setCurrentCurrency((prev) => result.currencies[prev.code] || prev);
+      }
+    }
+    loadRates();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleRefreshRates = async () => {
+    setRatesStatus((prev) => ({ ...prev, isLoading: true }));
+    const result = await fetchLiveExchangeRates(true);
+    if (result) {
+      setCurrencies(result.currencies);
+      setRatesStatus({
+        isLive: result.isLive,
+        lastUpdated: result.lastUpdated,
+        isLoading: false,
+      });
+      setCurrentCurrency((prev) => result.currencies[prev.code] || prev);
+    }
+  };
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
 
   // Geolocation & Map Centering State
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -257,6 +313,8 @@ export default function App() {
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onResetFilters={handleResetFilters}
         onSelectIntent={(intent) => handleUpdateFilters({ intent })}
+        currentCurrency={currentCurrency}
+        onOpenCurrencyModal={() => setIsCurrencyModalOpen(true)}
       />
 
       {/* 2. Horizontal Category Bar with Filter trigger & Tax toggle */}
@@ -364,7 +422,7 @@ export default function App() {
 
             {filters.intent === 'rent' && (filters.minRent > 1500 || filters.maxRent < 6000) && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-neutral-300 font-semibold text-neutral-800">
-                Rent: ${filters.minRent} – ${filters.maxRent}/mo
+                Rent: {formatCurrency(filters.minRent, currentCurrency)} – {formatCurrency(filters.maxRent, currentCurrency)}/mo
                 <button onClick={() => handleUpdateFilters({ minRent: 1500, maxRent: 6000 })} className="hover:text-neutral-900">
                   <X className="w-3 h-3" />
                 </button>
@@ -373,7 +431,7 @@ export default function App() {
 
             {filters.intent === 'sale' && (filters.minSalePrice > 500000 || filters.maxSalePrice < 3000000) && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-neutral-300 font-semibold text-neutral-800">
-                Sale: ${filters.minSalePrice.toLocaleString()} – ${filters.maxSalePrice.toLocaleString()}
+                Sale: {formatCurrency(filters.minSalePrice, currentCurrency)} – {formatCurrency(filters.maxSalePrice, currentCurrency)}
                 <button onClick={() => handleUpdateFilters({ minSalePrice: 500000, maxSalePrice: 3000000 })} className="hover:text-neutral-900">
                   <X className="w-3 h-3" />
                 </button>
@@ -454,8 +512,20 @@ export default function App() {
                     </button>
                   )}
                   <button
+                    id="header-fullscreen-map-toggle-btn"
+                    onClick={() => setIsMapFullscreen((prev) => !prev)}
+                    className="text-xs font-bold text-neutral-700 hover:text-neutral-900 bg-white border border-neutral-200 px-3 py-1.5 rounded-full shadow-xs flex items-center gap-1.5 cursor-pointer transition hover:bg-neutral-50"
+                    title={isMapFullscreen ? 'Exit fullscreen' : 'Expand map fullscreen'}
+                  >
+                    {isMapFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                    <span>{isMapFullscreen ? 'Exit full screen' : 'Full screen'}</span>
+                  </button>
+                  <button
                     id="switch-to-list-header-btn"
-                    onClick={() => setViewMode('grid')}
+                    onClick={() => {
+                      setIsMapFullscreen(false);
+                      setViewMode('grid');
+                    }}
                     className="text-xs font-bold text-neutral-700 hover:text-neutral-900 bg-white border border-neutral-200 px-3 py-1.5 rounded-full shadow-xs flex items-center gap-1.5 cursor-pointer transition hover:bg-neutral-50"
                   >
                     <List className="w-3.5 h-3.5" />
@@ -477,6 +547,9 @@ export default function App() {
                 }}
                 onTriggerNearMe={handleNearMe}
                 isLocating={isLocating}
+                currentCurrency={currentCurrency}
+                isFullscreen={isMapFullscreen}
+                onToggleFullscreen={(fs) => setIsMapFullscreen(fs)}
               />
             </motion.div>
           ) : (
@@ -515,6 +588,7 @@ export default function App() {
                       onToggleWishlist={toggleWishlist}
                       onSelect={(l) => setSelectedListing(l)}
                       showTotalBeforeTaxes={filters.showTotalBeforeTaxes}
+                      currentCurrency={currentCurrency}
                     />
                   ))}
                 </div>
@@ -656,7 +730,10 @@ export default function App() {
       </div>
 
       {/* 6. Footer */}
-      <Footer />
+      <Footer
+        currentCurrency={currentCurrency}
+        onOpenCurrencyModal={() => setIsCurrencyModalOpen(true)}
+      />
 
       {/* 7. Modals */}
       {/* Expanded Interactive Search Bar Modal */}
@@ -674,6 +751,7 @@ export default function App() {
         filters={filters}
         onApplyFilters={(newFilters) => setFilters(newFilters)}
         totalFilteredCount={filteredListings.length}
+        currentCurrency={currentCurrency}
       />
 
       {/* Stay / Rental / Sale Inspection & Inquiry Modal */}
@@ -682,6 +760,7 @@ export default function App() {
         onClose={() => setSelectedListing(null)}
         isWishlisted={selectedListing ? wishlist.includes(selectedListing.id) : false}
         onToggleWishlist={toggleWishlist}
+        currentCurrency={currentCurrency}
       />
 
       {/* Wishlist Drawer */}
@@ -691,6 +770,18 @@ export default function App() {
         wishlistedListings={wishlistedListings}
         onRemoveFromWishlist={toggleWishlist}
         onSelectListing={(l) => setSelectedListing(l)}
+        currentCurrency={currentCurrency}
+      />
+
+      {/* Global Currency Selection Modal */}
+      <CurrencyModal
+        isOpen={isCurrencyModalOpen}
+        onClose={() => setIsCurrencyModalOpen(false)}
+        selectedCurrency={currentCurrency}
+        onSelectCurrency={(currency) => setCurrentCurrency(currency)}
+        currencies={currencies}
+        ratesStatus={ratesStatus}
+        onRefreshRates={handleRefreshRates}
       />
 
     </div>
