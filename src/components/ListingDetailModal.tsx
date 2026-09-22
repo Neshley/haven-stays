@@ -18,7 +18,8 @@ import {
   Clock,
   Car,
   Home,
-  FileText
+  FileText,
+  MessageSquare,
 } from 'lucide-react';
 import { Listing } from '../types';
 import { AMENITY_OPTIONS } from '../data/listings';
@@ -31,6 +32,7 @@ interface ListingDetailModalProps {
   isWishlisted: boolean;
   onToggleWishlist: (id: string) => void;
   currentCurrency: CurrencyInfo;
+  onShareToChat?: (listing: Listing) => void;
 }
 
 export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
@@ -39,6 +41,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
   isWishlisted,
   onToggleWishlist,
   currentCurrency,
+  onShareToChat,
 }) => {
   // Stay states
   const [nights, setNights] = useState(5);
@@ -129,7 +132,18 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {onShareToChat && (
+              <button
+                onClick={() => onShareToChat(listing)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-neutral-800 bg-neutral-100 hover:bg-neutral-200 rounded-full transition cursor-pointer"
+                title="Discuss this listing in Haven Community Chat"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-[#FF385C]" />
+                <span>Ask Group</span>
+              </button>
+            )}
+
             <button
               onClick={handleShare}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 rounded-full transition cursor-pointer"

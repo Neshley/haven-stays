@@ -1,6 +1,6 @@
 {
   "name": "Vacation Rentals & Stays",
-  "description": "Comprehensive property discovery platform for vacation stays, long-term apartment rentals, and real estate for sale with adaptive filters, mortgage calculator, and booking tools.",
+  "description": "Comprehensive property discovery platform for vacation stays, long-term apartment rentals, and real estate for sale, featuring real-time Haven Community group chat, adaptive filters, and mortgage calculator.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

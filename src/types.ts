@@ -111,3 +111,43 @@ export interface FilterState {
   };
   showTotalBeforeTaxes: boolean;
 }
+
+export type UserRole = 'traveler' | 'superhost' | 'local_guide' | 'digital_nomad';
+
+export interface ChatUser {
+  id: string;
+  name: string;
+  avatar: string;
+  role: UserRole;
+  location?: string;
+  isOnline?: boolean;
+}
+
+export interface ListingAttachment {
+  id: string;
+  title: string;
+  image: string;
+  priceFormatted: string;
+  intent: ListingIntent;
+  city: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  channelId: string;
+  sender: ChatUser;
+  content: string;
+  timestamp: number;
+  reactions?: Record<string, string[]>; // emoji -> array of user IDs
+  listingAttachment?: ListingAttachment;
+}
+
+export interface ChatChannel {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'community' | 'destinations' | 'topics';
+  unreadCount?: number;
+}
+

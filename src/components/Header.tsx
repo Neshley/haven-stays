@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Globe, Menu, User, Heart, Compass, Check, Home, Building2, Key } from 'lucide-react';
+import { Search, Globe, Menu, User, Heart, Compass, Check, Home, Building2, Key, MessageSquare, Users } from 'lucide-react';
 import { FilterState } from '../types';
 import { CurrencyInfo } from '../utils/currency';
 
@@ -13,6 +13,8 @@ interface HeaderProps {
   onSelectIntent: (intent: 'all' | 'stay' | 'rent' | 'sale') => void;
   currentCurrency: CurrencyInfo;
   onOpenCurrencyModal: () => void;
+  onOpenChat: () => void;
+  onlineChatCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,6 +27,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectIntent,
   currentCurrency,
   onOpenCurrencyModal,
+  onOpenChat,
+  onlineChatCount = 6,
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -214,6 +218,21 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
+            {/* Haven Community Group Chat Button */}
+            <button
+              id="community-chat-header-button"
+              onClick={onOpenChat}
+              className="relative flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-800 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200/80 rounded-full transition cursor-pointer shadow-2xs hover:shadow-xs"
+              title="Open Haven Community Group Chat"
+            >
+              <Users className="w-4 h-4 text-[#FF385C]" />
+              <span className="hidden sm:inline">Community</span>
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200/60">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {onlineChatCount}
+              </span>
+            </button>
+
             {/* User Account Dropdown */}
             <div className="relative" ref={menuRef}>
               <button
@@ -259,6 +278,19 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
 
                   <div className="border-t border-neutral-100 my-1"></div>
+
+                  <button
+                    onClick={() => { onOpenChat(); setUserMenuOpen(false); }}
+                    className="w-full text-left px-4 py-2 hover:bg-neutral-50 flex items-center justify-between text-neutral-800 text-xs font-semibold"
+                  >
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-[#FF385C]" />
+                      <span>Haven Community Chat</span>
+                    </div>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">
+                      Live
+                    </span>
+                  </button>
 
                   <button
                     onClick={() => { onOpenWishlist(); setUserMenuOpen(false); }}

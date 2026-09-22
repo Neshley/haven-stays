@@ -11,7 +11,9 @@ import { ListingDetailModal } from './components/ListingDetailModal';
 import { MapView } from './components/MapView';
 import { WishlistModal } from './components/WishlistModal';
 import { CurrencyModal } from './components/CurrencyModal';
+import { CommunityChatModal } from './components/CommunityChatModal';
 import { Footer } from './components/Footer';
+import { useChat } from './utils/useChat';
 import {
   SUPPORTED_CURRENCIES,
   DEFAULT_SUPPORTED_CURRENCIES,
@@ -20,7 +22,7 @@ import {
   formatCurrency,
   fetchLiveExchangeRates,
 } from './utils/currency';
-import { Map, List, RotateCcw, X, SlidersHorizontal, Sparkles, Building2, Key, Home, LocateFixed, Loader2, AlertCircle, CheckCircle2, Maximize2, Minimize2 } from 'lucide-react';
+import { Map, List, RotateCcw, X, SlidersHorizontal, Sparkles, Building2, Key, Home, LocateFixed, Loader2, AlertCircle, CheckCircle2, Maximize2, Minimize2, MessageSquare, Users } from 'lucide-react';
 
 const INITIAL_FILTERS: FilterState = {
   intent: 'all',
@@ -61,6 +63,9 @@ export default function App() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [pendingListingToShare, setPendingListingToShare] = useState<Listing | null>(null);
+  const chat = useChat();
   const [currencies, setCurrencies] = useState<Record<string, CurrencyInfo>>(DEFAULT_SUPPORTED_CURRENCIES);
   const [ratesStatus, setRatesStatus] = useState<{ isLive: boolean; lastUpdated?: string; isLoading: boolean }>({
     isLive: false,
@@ -315,6 +320,8 @@ export default function App() {
         onSelectIntent={(intent) => handleUpdateFilters({ intent })}
         currentCurrency={currentCurrency}
         onOpenCurrencyModal={() => setIsCurrencyModalOpen(true)}
+        onOpenChat={() => setIsChatOpen(true)}
+        onlineChatCount={chat.onlineCount}
       />
 
       {/* 2. Horizontal Category Bar with Filter trigger & Tax toggle */}
@@ -726,6 +733,27 @@ export default function App() {
               )}
             </AnimatePresence>
           </motion.button>
+
+          {/* Floating Haven Community Chat Button */}
+          <motion.button
+            id="floating-community-chat-button"
+            layout
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.94 }}
+            transition={{
+              layout: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+              scale: { type: 'spring', stiffness: 400, damping: 25 },
+            }}
+            onClick={() => setIsChatOpen(true)}
+            className="pointer-events-auto bg-[#FF385C] hover:bg-[#E00B41] text-white px-4 py-3 rounded-full font-bold text-sm shadow-xl flex items-center gap-2 cursor-pointer border border-[#E00B41]"
+            title="Open Community Group Chat"
+          >
+            <MessageSquare className="w-4 h-4 fill-white" />
+            <span>Chat</span>
+            <span className="bg-white/25 text-white text-xs px-1.5 py-0.2 rounded-full font-semibold">
+              {chat.onlineCount}
+            </span>
+          </motion.button>
         </div>
       </div>
 
@@ -761,6 +789,34 @@ export default function App() {
         isWishlisted={selectedListing ? wishlist.includes(selectedListing.id) : false}
         onToggleWishlist={toggleWishlist}
         currentCurrency={currentCurrency}
+        onShareToChat={(listing) => {
+          setSelectedListing(null);
+          setPendingListingToShare(listing);
+          setIsChatOpen(true);
+        }}
+      />
+
+      {/* Haven Group Community Chat Modal */}
+      <CommunityChatModal
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        currentUser={chat.currentUser}
+        onUpdateCurrentUser={chat.setCurrentUser}
+        channels={chat.channels}
+        activeChannel={chat.activeChannel}
+        onSelectChannel={chat.setActiveChannelId}
+        messages={chat.messages}
+        onlineCount={chat.onlineCount}
+        isConnected={chat.isConnected}
+        typingUsers={chat.typingUsers}
+        soundEnabled={chat.soundEnabled}
+        onToggleSound={() => chat.setSoundEnabled(!chat.soundEnabled)}
+        onSendMessage={chat.sendMessage}
+        onToggleReaction={chat.toggleReaction}
+        onSendTyping={chat.sendTyping}
+        onSelectListingToView={(listing) => setSelectedListing(listing)}
+        pendingListingToShare={pendingListingToShare}
+        onClearPendingListing={() => setPendingListingToShare(null)}
       />
 
       {/* Wishlist Drawer */}
