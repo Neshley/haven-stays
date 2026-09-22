@@ -155,3 +155,67 @@ export interface ChatChannel {
   unreadCount?: number;
 }
 
+// 1. Forum Community Discussions
+export type ForumTopicCategory = 'all' | 'hosting' | 'travel-tips' | 'accessibility' | 'local-guides' | 'general';
+
+export interface ForumReply {
+  id: string;
+  threadId: string;
+  author: ChatUser;
+  content: string;
+  timestamp: number;
+  reactions?: Record<string, string[]>;
+  parentReplyId?: string; // nested threaded reply
+  isPinned?: boolean;
+}
+
+export interface ForumThread {
+  id: string;
+  title: string;
+  category: ForumTopicCategory;
+  tags: string[];
+  author: ChatUser;
+  content: string;
+  timestamp: number;
+  replies: ForumReply[];
+  reactions?: Record<string, string[]>;
+  isPinned?: boolean;
+  isLocked?: boolean;
+  viewCount: number;
+  listingAttachment?: ListingAttachment;
+  reports?: { userId: string; reason: string; timestamp: number }[];
+}
+
+// 2. Direct Messages (DMs)
+export interface DirectMessageAttachment {
+  type: 'listing' | 'booking_inquiry';
+  listing?: ListingAttachment;
+  inquiryDetails?: {
+    dates?: string;
+    guests?: number;
+    offerAmount?: string;
+    note?: string;
+  };
+}
+
+export interface DirectMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  recipientId: string;
+  content: string;
+  timestamp: number;
+  status: 'sent' | 'delivered' | 'read';
+  attachment?: DirectMessageAttachment;
+}
+
+export interface DirectConversation {
+  id: string;
+  otherUser: ChatUser;
+  lastMessage?: DirectMessage;
+  unreadCount: number;
+  isBlocked?: boolean;
+  isMuted?: boolean;
+  updatedAt: number;
+}
+
