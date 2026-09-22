@@ -30,7 +30,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
   };
 
   return (
-    <div className="sticky top-20 z-30 bg-white border-b border-neutral-200/80 shadow-xs">
+    <div className="sticky top-[108px] z-30 bg-[#FBFBFA]/95 backdrop-blur-sm border-b border-neutral-200/80 shadow-2xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4 py-3">
           
@@ -61,11 +61,11 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
                     onClick={() => onSelectCategory(cat.id === 'all' ? null : cat.id)}
                     className={`flex flex-col items-center gap-1.5 pb-2 border-b-2 transition flex-shrink-0 cursor-pointer group ${
                       isActive
-                        ? 'border-neutral-900 text-neutral-900 font-semibold'
-                        : 'border-transparent text-neutral-500 hover:text-neutral-800 hover:border-neutral-300 font-medium'
+                        ? 'border-emerald-800 text-emerald-950 font-bold'
+                        : 'border-transparent text-neutral-500 hover:text-emerald-900 hover:border-neutral-300 font-medium'
                     }`}
                   >
-                    <div className={`transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-neutral-900' : 'text-neutral-500 group-hover:text-neutral-800'}`}>
+                    <div className={`transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-emerald-800' : 'text-neutral-500 group-hover:text-emerald-800'}`}>
                       <DynamicIcon name={cat.icon} className="w-6 h-6 stroke-[1.8]" />
                     </div>
                     <span className="text-xs whitespace-nowrap">{cat.label}</span>
@@ -93,27 +93,27 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
               onClick={onOpenFilters}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer shadow-2xs ${
                 activeFilterCount > 0
-                  ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm'
-                  : 'border-neutral-300 hover:border-neutral-900 text-neutral-800 bg-white'
+                  ? 'border-emerald-900 bg-emerald-900 text-white shadow-sm'
+                  : 'border-neutral-300 hover:border-emerald-800 text-neutral-800 bg-white'
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 stroke-[2.2]" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#FF385C] text-white flex items-center justify-center text-[10px] font-bold">
+                <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
                   {activeFilterCount}
                 </span>
               )}
             </button>
 
-            {/* Display total before taxes toggle (signature Airbnb feature) */}
-            <div className="hidden xl:flex items-center gap-3 border border-neutral-300 rounded-xl px-3.5 py-2">
+            {/* Display total before taxes toggle */}
+            <div className="hidden xl:flex items-center gap-3 border border-neutral-300 rounded-xl px-3.5 py-2 bg-white">
               <span className="text-xs font-semibold text-neutral-800 whitespace-nowrap">Display total before taxes</span>
               <button
                 id="toggle-tax-display"
                 onClick={onToggleTotalBeforeTaxes}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
-                  showTotalBeforeTaxes ? 'bg-neutral-900' : 'bg-neutral-300'
+                  showTotalBeforeTaxes ? 'bg-emerald-900' : 'bg-neutral-300'
                 }`}
                 role="switch"
                 aria-checked={showTotalBeforeTaxes}

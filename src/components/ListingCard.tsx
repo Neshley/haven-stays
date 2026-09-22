@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Star, ChevronLeft, ChevronRight, Building2, Key, Sparkles } from 'lucide-react';
+import { Heart, Star, ChevronLeft, ChevronRight, Building2, Key, Sparkles, ShieldCheck } from 'lucide-react';
 import { Listing } from '../types';
 import { CurrencyInfo, formatCurrency } from '../utils/currency';
 
@@ -41,32 +41,33 @@ export const ListingCard: React.FC<ListingCardProps> = ({
   const renderBadge = () => {
     if (listing.intent === 'sale') {
       return (
-        <span className="bg-emerald-900/90 backdrop-blur-xs text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md tracking-wide flex items-center gap-1">
-          <Building2 className="w-3 h-3 text-emerald-300" />
-          For Sale
+        <span className="bg-[#1B4332]/95 backdrop-blur-xs text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md tracking-wide flex items-center gap-1 border border-emerald-400/30">
+          <Building2 className="w-3 h-3 text-amber-300" />
+          Freehold Sale
         </span>
       );
     }
     if (listing.intent === 'rent') {
       return (
-        <span className="bg-blue-900/90 backdrop-blur-xs text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md tracking-wide flex items-center gap-1">
+        <span className="bg-slate-900/95 backdrop-blur-xs text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md tracking-wide flex items-center gap-1 border border-blue-400/30">
           <Key className="w-3 h-3 text-blue-300" />
-          Rental Flat
+          Monthly Lease
         </span>
       );
     }
     if (listing.isGuestFavorite) {
       return (
-        <span className="bg-white/95 backdrop-blur-xs text-neutral-900 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md tracking-wide flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-[#FF385C]" />
-          Guest favourite
+        <span className="bg-white/95 backdrop-blur-xs text-neutral-900 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md tracking-wide flex items-center gap-1 border border-neutral-200">
+          <Sparkles className="w-3 h-3 text-emerald-600" />
+          Sanctuary Choice
         </span>
       );
     }
     if (listing.isSuperhost) {
       return (
-        <span className="bg-white/95 backdrop-blur-xs text-neutral-900 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md tracking-wide">
-          Rare find
+        <span className="bg-white/95 backdrop-blur-xs text-neutral-900 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md tracking-wide flex items-center gap-1 border border-neutral-200">
+          <ShieldCheck className="w-3 h-3 text-emerald-600" />
+          Verified Host
         </span>
       );
     }
@@ -167,6 +168,17 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         {/* Top Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
           {renderBadge()}
+          {listing.status === 'taken' && (
+            <span className="bg-neutral-900/90 text-white text-[11px] font-black px-2.5 py-1 rounded-full shadow-lg tracking-wide uppercase flex items-center gap-1 border border-neutral-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+              {listing.intent === 'rent' ? 'Taken / Leased' : listing.intent === 'sale' ? 'Sold' : 'Booked'}
+            </span>
+          )}
+          {listing.status === 'pending' && (
+            <span className="bg-amber-600 text-white text-[11px] font-black px-2.5 py-1 rounded-full shadow-lg tracking-wide uppercase">
+              Application Pending
+            </span>
+          )}
         </div>
 
         {/* Wishlist Heart Button */}
@@ -178,7 +190,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         >
           <Heart
             className={`w-6 h-6 stroke-white stroke-[2] transition-colors ${
-              isWishlisted ? 'fill-[#FF385C] text-[#FF385C]' : 'fill-black/30'
+              isWishlisted ? 'fill-emerald-600 text-emerald-600' : 'fill-black/30'
             }`}
           />
         </button>

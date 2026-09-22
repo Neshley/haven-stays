@@ -6,6 +6,14 @@
   }
 }
 
+.font-display {
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, sans-serif;
+}
+
+.font-serif-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
 /* Hide scrollbar for category carousels */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

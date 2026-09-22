@@ -4,6 +4,8 @@ export type PlaceType = 'any' | 'entire' | 'room';
 
 export type ListingIntent = 'stay' | 'rent' | 'sale';
 
+export type ListingStatus = 'available' | 'taken' | 'pending';
+
 export interface Host {
   name: string;
   avatar: string;
@@ -77,6 +79,8 @@ export interface Listing {
   host: Host;
   reviews: Review[];
   availableDates: string;
+  status?: ListingStatus; // 'available' | 'taken' | 'pending'
+  managedByCurrentUser?: boolean;
 }
 
 export interface FilterState {

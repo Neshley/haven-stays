@@ -33,6 +33,8 @@ interface ListingDetailModalProps {
   onToggleWishlist: (id: string) => void;
   currentCurrency: CurrencyInfo;
   onShareToChat?: (listing: Listing) => void;
+  onOpenHostPortal?: (listingId?: string) => void;
+  onUpdateListingStatus?: (listingId: string, status: 'available' | 'taken' | 'pending') => void;
 }
 
 export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
@@ -42,6 +44,8 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
   onToggleWishlist,
   currentCurrency,
   onShareToChat,
+  onOpenHostPortal,
+  onUpdateListingStatus,
 }) => {
   // Stay states
   const [nights, setNights] = useState(5);
@@ -133,6 +137,20 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {onOpenHostPortal && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenHostPortal(listing.id);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-neutral-900 hover:bg-black rounded-full transition cursor-pointer shadow-xs"
+                title="Manage this listing in Host Portal"
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Host Portal</span>
+              </button>
+            )}
+
             {onShareToChat && (
               <button
                 onClick={() => onShareToChat(listing)}
@@ -194,9 +212,46 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                   Guest favourite
                 </span>
               )}
+              {listing.status === 'taken' && (
+                <span className="bg-[#FF385C] text-white text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  {listing.intent === 'rent' ? 'Taken / Leased' : listing.intent === 'sale' ? 'Sold' : 'Booked'}
+                </span>
+              )}
+              {listing.status === 'pending' && (
+                <span className="bg-amber-500 text-white text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                  Application Pending
+                </span>
+              )}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
+            {/* Taken Notification Banner */}
+            {listing.status === 'taken' && (
+              <div className="mt-3 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-rose-950">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF385C] flex-shrink-0" />
+                  <div>
+                    <span className="font-extrabold uppercase tracking-wide">
+                      {listing.intent === 'rent' ? 'Apartment Leased / Taken' : listing.intent === 'sale' ? 'Property Sold' : 'Dates Booked'}
+                    </span>
+                    <p className="text-rose-700 text-[11px] mt-0.5">
+                      The landlord/host has marked this property as taken. You can still message the host for future openings.
+                    </p>
+                  </div>
+                </div>
+                {onUpdateListingStatus && (
+                  <button
+                    type="button"
+                    onClick={() => onUpdateListingStatus(listing.id, 'available')}
+                    className="px-3 py-1.5 bg-white border border-rose-300 hover:bg-rose-100/60 font-bold text-[11px] rounded-xl text-rose-900 cursor-pointer self-start sm:self-auto flex-shrink-0"
+                  >
+                    Mark Available
+                  </button>
+                )}
+              </div>
+            )}
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight mt-3">
               {listing.title}
             </h1>
             
@@ -265,6 +320,10 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                       Represented by: <span className="text-neutral-800">{listing.host.name}</span> ({listing.host.roleTitle})
                     </p>
                   )}
+                  <div className="flex items-center gap-1.5 mt-2 bg-emerald-50 text-emerald-900 text-xs font-bold px-2.5 py-1 rounded-full w-fit border border-emerald-300">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Verified Architect Host • Physical Inspection Passed</span>
+                  </div>
                 </div>
                 <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-neutral-100 flex-shrink-0">
                   <img
@@ -483,16 +542,16 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                     {bookingConfirmed ? (
                       <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-4 rounded-2xl text-center space-y-1">
                         <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-600" />
-                        <p className="font-bold text-sm">Reservation Requested!</p>
-                        <p className="text-xs text-emerald-700">Check your inbox for confirmation.</p>
+                        <p className="font-bold text-sm">Sanctuary Reserved!</p>
+                        <p className="text-xs text-emerald-700">Check your inbox for escrow receipt & host access codes.</p>
                       </div>
                     ) : (
                       <button
                         id="reserve-action-button"
                         onClick={handleReserve}
-                        className="w-full bg-[#FF385C] hover:bg-[#E00B41] text-white font-bold py-3.5 rounded-xl shadow-md transition cursor-pointer active:scale-98 text-sm"
+                        className="w-full bg-[#1B4332] hover:bg-[#2D6A4F] text-white font-bold py-3.5 rounded-xl shadow-md transition cursor-pointer active:scale-98 text-sm"
                       >
-                        Reserve stay
+                        Reserve Sanctuary Stay
                       </button>
                     )}
 
@@ -506,13 +565,24 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                         <span>{formatCurrency(cleaningFee, currentCurrency)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="underline">Haven service fee</span>
+                        <span className="underline">Haven escrow fee</span>
                         <span>{formatCurrency(serviceFee, currentCurrency)}</span>
                       </div>
                       <div className="flex justify-between font-bold text-sm text-neutral-900 pt-2 border-t border-neutral-200">
                         <span>Total</span>
                         <span>{formatCurrency(grandTotal, currentCurrency)}</span>
                       </div>
+                    </div>
+
+                    {/* Trust Signals Underneath */}
+                    <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200/80 space-y-2 text-[11px] text-neutral-600">
+                      <div className="flex items-center gap-2 text-emerald-800 font-bold">
+                        <ShieldCheck className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                        <span>100% Escrow Protection</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-neutral-500">
+                        Your payment is held safely in escrow and only released to the host 24 hours after arrival.
+                      </p>
                     </div>
                   </>
                 )}

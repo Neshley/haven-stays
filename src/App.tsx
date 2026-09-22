@@ -12,6 +12,8 @@ import { MapView } from './components/MapView';
 import { WishlistModal } from './components/WishlistModal';
 import { CurrencyModal } from './components/CurrencyModal';
 import { CommunityChatModal } from './components/CommunityChatModal';
+import { HostPortalModal } from './components/HostPortalModal';
+import { LandingPage } from './components/LandingPage';
 import { Footer } from './components/Footer';
 import { useChat } from './utils/useChat';
 import {
@@ -58,6 +60,68 @@ const INITIAL_FILTERS: FilterState = {
 };
 
 export default function App() {
+  const [showLandingPage, setShowLandingPage] = useState(true);
+
+  // Persistent listings state (with localStorage caching so landlord/host added & modified listings persist)
+  const [listings, setListings] = useState<Listing[]>(() => {
+    try {
+      const saved = localStorage.getItem('haven_managed_listings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_LISTINGS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('haven_managed_listings', JSON.stringify(listings));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [listings]);
+
+  // Host & Landlord Portal State
+  const [isHostPortalOpen, setIsHostPortalOpen] = useState(false);
+  const [hostPortalEditListingId, setHostPortalEditListingId] = useState<string | null>(null);
+
+  const handleAddListing = (newListing: Listing) => {
+    setListings((prev) => [newListing, ...prev]);
+  };
+
+  const handleUpdateListing = (updated: Listing) => {
+    setListings((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+    if (selectedListing && selectedListing.id === updated.id) {
+      setSelectedListing(updated);
+    }
+  };
+
+  const handleDeleteListing = (id: string) => {
+    setListings((prev) => prev.filter((l) => l.id !== id));
+    if (selectedListing && selectedListing.id === id) {
+      setSelectedListing(null);
+    }
+  };
+
+  const handleUpdateListingStatus = (id: string, status: 'available' | 'taken' | 'pending') => {
+    setListings((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, status, managedByCurrentUser: true } : l))
+    );
+    if (selectedListing && selectedListing.id === id) {
+      setSelectedListing((prev) => (prev ? { ...prev, status, managedByCurrentUser: true } : null));
+    }
+  };
+
+  const handleOpenHostPortal = (listingId?: string) => {
+    setHostPortalEditListingId(listingId || null);
+    setIsHostPortalOpen(true);
+  };
+
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -225,7 +289,7 @@ export default function App() {
 
   // Comprehensive Multi-Intent Filtering Engine
   const filteredListings = useMemo(() => {
-    return INITIAL_LISTINGS.filter((listing) => {
+    return listings.filter((listing) => {
       // 1. Transaction Intent (Stays vs Rentals vs For Sale)
       if (filters.intent !== 'all' && listing.intent !== filters.intent) {
         return false;
@@ -289,11 +353,11 @@ export default function App() {
 
       return true;
     });
-  }, [filters]);
+  }, [filters, listings]);
 
   const wishlistedListings = useMemo(() => {
-    return INITIAL_LISTINGS.filter((l) => wishlist.includes(l.id));
-  }, [wishlist]);
+    return listings.filter((l) => wishlist.includes(l.id));
+  }, [listings, wishlist]);
 
   const handleUpdateFilters = (updates: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...updates }));
@@ -305,6 +369,33 @@ export default function App() {
 
   // Quick destinations across metros
   const quickLocations = ['All', 'New York', 'London', 'Paris', 'Miami', 'Berlin', 'Kyoto', 'Amalfi Coast', 'Lake Tahoe', 'Santorini', 'Barcelona'];
+
+  if (showLandingPage) {
+    return (
+      <>
+        <LandingPage
+          onEnterApp={(intent) => {
+            if (intent) {
+              handleUpdateFilters({ intent });
+            }
+            setShowLandingPage(false);
+          }}
+          onOpenCurrencyModal={() => setIsCurrencyModalOpen(true)}
+          currentCurrency={currentCurrency}
+          onlineChatCount={chat.onlineCount}
+        />
+        <CurrencyModal
+          isOpen={isCurrencyModalOpen}
+          onClose={() => setIsCurrencyModalOpen(false)}
+          selectedCurrency={currentCurrency}
+          onSelectCurrency={(currency) => setCurrentCurrency(currency)}
+          currencies={currencies}
+          ratesStatus={ratesStatus}
+          onRefreshRates={handleRefreshRates}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-neutral-900 font-sans selection:bg-[#FF385C]/20 selection:text-[#FF385C]">
@@ -322,6 +413,8 @@ export default function App() {
         onOpenCurrencyModal={() => setIsCurrencyModalOpen(true)}
         onOpenChat={() => setIsChatOpen(true)}
         onlineChatCount={chat.onlineCount}
+        onOpenLandingPage={() => setShowLandingPage(true)}
+        onOpenHostPortal={() => handleOpenHostPortal()}
       />
 
       {/* 2. Horizontal Category Bar with Filter trigger & Tax toggle */}
@@ -761,6 +854,8 @@ export default function App() {
       <Footer
         currentCurrency={currentCurrency}
         onOpenCurrencyModal={() => setIsCurrencyModalOpen(true)}
+        onOpenLandingPage={() => setShowLandingPage(true)}
+        onOpenHostPortal={() => handleOpenHostPortal()}
       />
 
       {/* 7. Modals */}
@@ -794,6 +889,31 @@ export default function App() {
           setPendingListingToShare(listing);
           setIsChatOpen(true);
         }}
+        onOpenHostPortal={(id) => handleOpenHostPortal(id)}
+        onUpdateListingStatus={handleUpdateListingStatus}
+      />
+
+      {/* Host & Landlord Property Management & Creation Portal */}
+      <HostPortalModal
+        isOpen={isHostPortalOpen}
+        onClose={() => {
+          setIsHostPortalOpen(false);
+          setHostPortalEditListingId(null);
+        }}
+        listings={listings}
+        onAddListing={handleAddListing}
+        onUpdateListing={handleUpdateListing}
+        onDeleteListing={handleDeleteListing}
+        onSelectListingToPreview={(l) => {
+          setSelectedListing(l);
+        }}
+        onShareToChat={(listing) => {
+          setIsHostPortalOpen(false);
+          setPendingListingToShare(listing);
+          setIsChatOpen(true);
+        }}
+        currentCurrency={currentCurrency}
+        initialEditListingId={hostPortalEditListingId}
       />
 
       {/* Haven Group Community Chat Modal */}
